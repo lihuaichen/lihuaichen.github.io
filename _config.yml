@@ -3,12 +3,12 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Hexo
-subtitle: ''
-description: ''
+title: XIMAN BLOG
+subtitle: 'XIMAN TECH'
+description: '成功都是留给有准备的人'
 keywords:
-author: John Doe
-language: en
+author: Carson Li
+language: zh-Hans
 timezone: ''
 
 # URL
@@ -102,7 +102,9 @@ theme: yilia
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
-  type: ''
+  type: git
+  repo: https://github.com/lihuaichen/lihuaichen.github.io.git
+  branch: master
 ##
 jsonContent:
    meta: false
