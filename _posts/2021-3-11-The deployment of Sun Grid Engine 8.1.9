@@ -1,0 +1,168 @@
+---
+title: The deployment of Sun Grid Engine 8.1.9
+date: 
+tags: sge
+---
+ 版权声明：本文为carson_li原创文章，未经博主允许不得转载。更多文章请访问个人网站https://www.lihuaichen.cn https://blog.csdn.net/lihuaichen/article/details/85161227   
+  Reason for upgrade: The new tool has a minimum system version requirement that requires several RHEL7 machines to be installed and deployed in 2021, but the old SGE version 6.2 no longer supports RHEL7
+
+Deployment platform: RHEL6.10
+
+Compatibility:rhel5,6,7
+
+The software download link:https://arc.liv.ac.uk/downloads/SGE/releases/8.1.9/
+
+Installation: Source code compilation and installation
+
+manuals: https://arc.liv.ac.uk/SGE/htmlman/manuals.html
+
+Install Path: /opt/sge
+
+
+
+Directory:
+1 System Installation
+
+1.1 Install the control node
+
+1.2 Install compute nodes
+
+1.3Install nis server and configure nodes join nis
+
+setup hosts file
+
+useradd sgeadmin
+
+2 NFS shared storage
+
+mkdir /opt/sge
+
+export /opt/sge
+
+[root@songe ~]# cat /etc/exports
+/opt/sge *(rw,insecure,no_all_squash,no_root_squash,sync)
+
+service nfs restart 
+
+iptables -F 
+
+service iptables stop 
+
+chkconfig iptables off
+
+setenforce 0
+
+And edit selinux configure file to disable selinux
+
+vim /etc/selinux/comfig
+
+SELINUX=disable
+
+reboot system
+
+2.1 Server side (master)
+
+yum -y install jemalloc-devel openssl-devel ncurses-devel pam-devel libXmu-devel hwloc-devel hwloc hwloc-libs java-devel javacc ant-junit libdb-devel motif-devel csh ksh xterm db4-utils perl-XML-Simple perl-Env xorg-x11-fonts-ISO8859-1-100dpi xorg-x11-fonts-ISO8859-1-75dpi
+
+iptables -F 
+
+service iptables stop 
+
+chkconfig iptables off
+
+setenforce 0
+
+Add server address into nis hosts file 
+
+root@nistest ~# cat /etc/hosts
+127.0.0.1 localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1 localhost localhost.localdomain localhost6 localhost6.localdomain6
+192.168.137.127 nistest
+192.168.137.121 songe
+192.168.137.122 sgemaster
+192.168.137.124 node1
+192.168.137.125 node2
+192.168.137.126 node3
+configure SGE_ROOT environment variable at all hosts
+
+
+
+vi /etc/profile
+
+export SGE_ROOT=/opt/sge
+export PATH=/opt/sge/bin/lx-amd64:$PATH
+
+
+
+source /etc/profile
+
+
+Unzip the installation package and cd 
+
+wget https://arc.liv.ac.uk/downloads/SGE/releases/8.1.9/sge-8.1.9.tar.gz
+tar -zxvf sge-8.1.9.tar.gz
+
+[root@songe ~]# cd /root/sge-8.1.9/source/
+
+sh scripts/bootstrap.sh && ./aimk && ./aimk -man
+echo Y | ./scripts/distinst -local -allall -libs -noexit
+chown -R sgeadmin.sgeadmin /opt/sge/
+ 
+cp /opt/sge/default/common/settings.sh /etc/profile.d/
+cp /opt/sge/default/common/settings.csh /etc/profile.d/
+source /etc/profile.d/settings.sh
+Install SGE qmaster point
+
+cd $SGE_ROOT
+
+./install_qmaster
+
+--
+
+Modify @allhosts Group and add all client hosts
+
+qconf -mhgrp @allhosts
+
+
+Enables task scheduling information collection
+
+vi /opt/sge/default/common/sched_configuration
+
+Change schedd_job_info true
+
+
+
+
+
+Add client server
+
+qconf -as node1
+
+qconf -as node2
+
+
+
+2.2 Client (Compute -01)
+
+mkdir /opt/sge
+
+mount -t nfs songe:/opt/sge /opt/sge
+
+cd /opt/sge
+
+yum install hwloc-devel
+
+
+
+
+
+run qhost command ,you will see node1 host and information in the queue ,This side is installed successfully.
+
+
+
+
+
+
+
+
+
